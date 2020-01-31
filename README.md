@@ -1,5 +1,5 @@
 # fastfeet-api
 
 <p align="center">
-  ![FastFeet Logo](/logo.png)
+  <img src="/logo.png">
 </p>
