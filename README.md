@@ -12,4 +12,4 @@
 
 ---
 
-[Rocketseat GoStack Bootcamp!](https://rocketseat.com.br/) :wave:
+[Rocketseat GoStack Bootcamp](https://rocketseat.com.br/) :wave:
