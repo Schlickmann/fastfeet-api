@@ -9,6 +9,7 @@ class User extends Model {
         email: Sequelize.STRING,
         password: Sequelize.VIRTUAL,
         password_hash: Sequelize.STRING,
+        phone: Sequelize.STRING,
         is_admin: Sequelize.BOOLEAN,
       },
       { sequelize }
@@ -22,6 +23,10 @@ class User extends Model {
     });
 
     return this;
+  }
+
+  static associate(models) {
+    this.hasMany(models.RecipientAddress, { foreignKey: 'user_id' });
   }
 
   checkPassword(password) {

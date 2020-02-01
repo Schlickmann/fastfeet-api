@@ -1,33 +1,47 @@
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('users', {
+    return queryInterface.createTable('recipient_addresses', {
       id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
       },
-      name: {
+      country: {
         type: Sequelize.STRING,
         allowNull: false,
       },
-      email: {
-        type: Sequelize.STRING,
-        allowNull: false,
-        unique: true,
-      },
-      password_hash: {
+      state: {
         type: Sequelize.STRING,
         allowNull: false,
       },
-      phone: {
+      city: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      street: {
         type: Sequelize.STRING,
         allowNull: true,
       },
-      is_admin: {
-        type: Sequelize.BOOLEAN,
-        defaultValue: false,
+      number: {
+        type: Sequelize.STRING,
         allowNull: false,
+      },
+      complement: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      zip_code: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      user_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
       },
       created_at: {
         type: Sequelize.DATE,
@@ -41,6 +55,6 @@ module.exports = {
   },
 
   down: queryInterface => {
-    return queryInterface.dropTable('users');
+    return queryInterface.dropTable('recipient_addresses');
   },
 };
