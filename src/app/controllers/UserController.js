@@ -3,6 +3,7 @@ import User from '../models/User';
 
 class UserController {
   async store(req, res) {
+    // Validing data entry
     const schema = Yup.object().shape({
       name: Yup.string().required(),
       email: Yup.string()
@@ -17,6 +18,7 @@ class UserController {
       return res.status(400).json({ error: 'Validation failed.' });
     }
 
+    // Lookup for user
     const userExists = await User.findOne({ where: { email: req.body.email } });
 
     if (userExists) {
