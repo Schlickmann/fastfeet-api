@@ -4,7 +4,7 @@ import User from '../app/models/User';
 import RecipientAddress from '../app/models/RecipientAddress';
 import databaseConfig from '../config/database';
 
-const models = { User, RecipientAddress };
+const models = [User, RecipientAddress];
 
 class Database {
   constructor() {
@@ -13,15 +13,10 @@ class Database {
 
   init() {
     this.connection = new Sequelize(databaseConfig);
-    Object.keys(models).forEach(model => {
-      models[model].init(this.connection);
-    });
 
-    Object.keys(models).forEach(model => {
-      if ('associate' in models[model]) {
-        models[model].associate(models);
-      }
-    });
+    models
+      .map(model => model.init(this.connection))
+      .map(model => model.associate && model.associate(this.connection.models));
   }
 }
 
