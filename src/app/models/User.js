@@ -30,6 +30,7 @@ class User extends Model {
   }
 
   checkPassword(password) {
+    if (!this.password_hash) return false;
     return bcrypt.compare(password, this.password_hash);
   }
 }
