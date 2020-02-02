@@ -1,7 +1,7 @@
 import * as Yup from 'yup';
 import User from '../models/User';
 
-class UserController {
+class UserAdministratorController {
   async store(req, res) {
     // Validing data entry
     const schema = Yup.object().shape({
@@ -9,12 +9,10 @@ class UserController {
       email: Yup.string()
         .email()
         .required(),
-      is_admin: Yup.boolean(),
-      password: Yup.string()
-        .min(6)
-        .when('is_admin', (is_admin, field) =>
-          is_admin ? field.required() : field
-        ),
+      is_admin: Yup.boolean().required(),
+      // Password is only required for administrator users
+      password: Yup.string().required(),
+      phone: Yup.string(),
     });
 
     if (!(await schema.isValid(req.body))) {
@@ -34,4 +32,4 @@ class UserController {
   }
 }
 
-export default new UserController();
+export default new UserAdministratorController();

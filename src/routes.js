@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import UserController from './app/controllers/UserController';
+import UserAdministratorController from './app/controllers/UserController';
 import SessionController from './app/controllers/SessionController';
 import RecipientController from './app/controllers/RecipientController';
 
@@ -10,7 +10,7 @@ const routes = new Router();
 /**
  * External Routes
  */
-routes.post('/users', UserController.store);
+routes.post('/users', UserAdministratorController.store);
 routes.post('/sessions', SessionController.store);
 
 routes.use(AuthMiddleware);
