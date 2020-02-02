@@ -47,28 +47,10 @@ class RecipientController {
     if (user) {
       const addressExists = await RecipientAddress.findOne({
         where: {
-          $and: [
-            {
-              zip_code: {
-                $eq: zip_code,
-              },
-            },
-            {
-              number: {
-                $eq: number,
-              },
-            },
-            {
-              street: {
-                $eq: street,
-              },
-            },
-            {
-              complement: {
-                $eq: complement || null,
-              },
-            },
-          ],
+          zip_code,
+          number,
+          street,
+          complement: complement || null,
         },
       });
 

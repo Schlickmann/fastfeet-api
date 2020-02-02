@@ -21,7 +21,7 @@ module.exports = {
       },
       street: {
         type: Sequelize.STRING,
-        allowNull: true,
+        allowNull: false,
       },
       number: {
         type: Sequelize.STRING,
