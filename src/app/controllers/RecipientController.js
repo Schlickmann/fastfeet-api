@@ -28,6 +28,33 @@ class RecipientController {
     return res.json(recipients);
   }
 
+  async show(req, res) {
+    const { id } = req.params;
+
+    const recipients = await User.findOne({
+      attributes: ['id', 'name', 'email', 'phone'],
+      where: { id, is_admin: false },
+      include: [
+        {
+          model: RecipientAddress,
+          as: 'recipient_addresses',
+          attributes: [
+            'id',
+            'country',
+            'state',
+            'city',
+            'zip_code',
+            'number',
+            'street',
+            'complement',
+          ],
+        },
+      ],
+    });
+
+    return res.json(recipients);
+  }
+
   async store(req, res) {
     const defaultSchema = Yup.object().shape({
       // Validing data entry
