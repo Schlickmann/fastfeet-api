@@ -37,7 +37,7 @@ class RecipientController {
     // Lookup for user
     let user = await User.findOne({ where: { email } });
 
-    if (user.is_admin) {
+    if (user && user.is_admin) {
       return res.status(401).json({
         error:
           'Administrators cannot use corporative email to add themselves as recipient.',
