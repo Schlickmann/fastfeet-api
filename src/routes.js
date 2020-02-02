@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import UserAdministratorController from './app/controllers/UserController';
+import UserAdministratorController from './app/controllers/UserAdministratorController';
 import SessionController from './app/controllers/SessionController';
 import RecipientController from './app/controllers/RecipientController';
 
