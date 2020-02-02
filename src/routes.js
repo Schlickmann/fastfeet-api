@@ -17,6 +17,6 @@ routes.use(AuthMiddleware);
 /**
  * Internal Routes
  */
-routes.post('/addresses', RecipientController.store);
+routes.post('/recipients', RecipientController.store);
 
 export default routes;

@@ -9,9 +9,12 @@ class UserController {
       email: Yup.string()
         .email()
         .required(),
+      is_admin: Yup.boolean(),
       password: Yup.string()
-        .required()
-        .min(6),
+        .min(6)
+        .when('is_admin', (is_admin, field) =>
+          is_admin ? field.required() : field
+        ),
     });
 
     if (!(await schema.isValid(req.body))) {
