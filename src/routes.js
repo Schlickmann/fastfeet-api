@@ -17,6 +17,11 @@ routes.use(AuthMiddleware);
 /**
  * Internal Routes
  */
+
+// Administrator users
+routes.put('/users', UserAdministratorController.update);
+
+// Recipients
 routes.post('/recipients', RecipientController.store);
 
 export default routes;
