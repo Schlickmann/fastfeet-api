@@ -26,7 +26,12 @@ class User extends Model {
   }
 
   static associate(models) {
-    this.hasMany(models.RecipientAddress, { foreignKey: 'user_id' });
+    this.hasMany(models.RecipientAddress, {
+      as: 'recipient_addresses',
+      foreignKey: 'user_id',
+      onDelete: 'cascade',
+      hooks: true,
+    });
   }
 
   checkPassword(password) {
