@@ -26,7 +26,10 @@ class UserAdministratorController {
       return res.status(400).json({ error: 'User already exists. ' });
     }
 
-    const { id, name, email, is_admin } = await User.create(req.body);
+    const { id, name, email, is_admin } = await User.create({
+      ...req.body,
+      user_type_id: 1,
+    });
 
     return res.json({ id, name, email, is_admin });
   }
