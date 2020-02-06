@@ -32,6 +32,12 @@ class User extends Model {
       onDelete: 'cascade',
       hooks: true,
     });
+
+    this.belongsTo(models.UserType, {
+      as: 'user_type',
+      foreignKey: 'user_type_id',
+    });
+    this.belongsTo(models.File, { as: 'avatar', foreignKey: 'avatar_id' });
   }
 
   checkPassword(password) {

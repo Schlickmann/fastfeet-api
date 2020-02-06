@@ -139,6 +139,7 @@ class RecipientController {
         name,
         email,
         phone: phone || null,
+        user_type_id: 2,
       });
     }
 
