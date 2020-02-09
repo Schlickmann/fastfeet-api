@@ -25,7 +25,10 @@ routes.use(AuthMiddleware);
  */
 
 // Administrator users
+routes.get('/users', UserAdministratorController.index);
+routes.get('/users/:id', UserAdministratorController.show);
 routes.put('/users', UserAdministratorController.update);
+routes.delete('/users/:id', UserAdministratorController.delete);
 routes.post('/files', upload.single('file'), FileController.store);
 
 // Recipients

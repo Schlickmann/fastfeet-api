@@ -5,7 +5,7 @@ import RecipientAddress from '../models/RecipientAddress';
 class RecipientController {
   async index(req, res) {
     const recipients = await User.findAll({
-      attributes: ['id', 'name', 'email', 'phone'],
+      attributes: ['id', 'name', 'email', 'phone', 'user_type_id'],
       where: { user_type_id: 2 },
       include: [
         {
@@ -32,7 +32,7 @@ class RecipientController {
     const { id } = req.params;
 
     const recipients = await User.findOne({
-      attributes: ['id', 'name', 'email', 'phone'],
+      attributes: ['id', 'name', 'email', 'phone', 'user_type_id'],
       where: { id, user_type_id: 2 },
       include: [
         {
@@ -151,6 +151,7 @@ class RecipientController {
 
     return res.json({
       id: user.id,
+      user_type_id: user.user_type_id,
       name,
       email,
       phone: phone || null,
@@ -194,14 +195,16 @@ class RecipientController {
     }
 
     const recipientAddress = await RecipientAddress.findOne({
-      where: { user_id: id },
+      where: { user_id: id, user_type_id: 2 },
     });
 
     if (!recipientAddress) {
       res.status(400).json({ error: 'Recipient Address not found.' });
     }
 
-    const { name, email, phone } = await recipient.update(req.body);
+    const { name, email, phone, user_type_id } = await recipient.update(
+      req.body
+    );
     const {
       country,
       state,
@@ -214,6 +217,7 @@ class RecipientController {
 
     return res.json({
       id,
+      user_type_id,
       name,
       email,
       phone,
@@ -234,7 +238,7 @@ class RecipientController {
 
     if (!recipient) {
       res.status(400).json({ error: 'Recipient not found.' });
-    } else if (recipient.user_type_id === 1) {
+    } else if (recipient.user_type_id !== 2) {
       res.status(400).json({ error: 'User is not a recipient.' });
     }
 
