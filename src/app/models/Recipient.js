@@ -4,6 +4,9 @@ class Recipient extends Model {
   static init(sequelize) {
     super.init(
       {
+        name: Sequelize.STRING,
+        email: Sequelize.STRING,
+        phone: Sequelize.STRING,
         country: Sequelize.STRING,
         state: Sequelize.STRING,
         city: Sequelize.STRING,
