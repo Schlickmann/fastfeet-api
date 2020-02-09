@@ -1,7 +1,6 @@
 import * as Yup from 'yup';
 import User from '../models/User';
-import UserType from '../models/UserType';
-import RecipientAddress from '../models/RecipientAddress';
+import Recipient from '../models/Recipient';
 
 class RecipientController {
   async index(req, res) {
@@ -9,10 +8,9 @@ class RecipientController {
       attributes: ['id', 'name', 'email', 'phone'],
       where: { user_type_id: 2 },
       include: [
-        { model: UserType, as: 'user_type', attributes: ['id', 'type'] },
         {
-          model: RecipientAddress,
-          as: 'recipient_addresses',
+          model: Recipient,
+          as: 'recipient_address',
           attributes: [
             'id',
             'country',
@@ -37,10 +35,9 @@ class RecipientController {
       attributes: ['id', 'name', 'email', 'phone'],
       where: { id, user_type_id: 2 },
       include: [
-        { model: UserType, as: 'user_type', attributes: ['id', 'type'] },
         {
-          model: RecipientAddress,
-          as: 'recipient_addresses',
+          model: Recipient,
+          as: 'recipient_address',
           attributes: [
             'id',
             'country',
@@ -72,28 +69,33 @@ class RecipientController {
         .email()
         .required('Email is required')
         .typeError('Invalid email address'),
+      user_type_id: Yup.number()
+        .required('User Type is required')
+        .typeError('Invalid user type'),
       phone: Yup.string()
         .required('Phone is required')
         .typeError('Invalid phone number'),
-      country: Yup.string()
-        .required('Country is required')
-        .typeError('Invalid country'),
-      state: Yup.string()
-        .required('State is required')
-        .typeError('Invalid state'),
-      city: Yup.string()
-        .required('City is required')
-        .typeError('Invalid city'),
-      street: Yup.string()
-        .required('Street is required')
-        .typeError('Invalid street'),
-      number: Yup.string()
-        .required('Number is required')
-        .typeError('Invalid number'),
-      complement: Yup.string(),
-      zip_code: Yup.string()
-        .required('Zip Code is required')
-        .typeError('Invalid Zip Code'),
+      recipient_address: Yup.object().shape({
+        country: Yup.string()
+          .required('Country is required')
+          .typeError('Invalid country'),
+        state: Yup.string()
+          .required('State is required')
+          .typeError('Invalid state'),
+        city: Yup.string()
+          .required('City is required')
+          .typeError('Invalid city'),
+        street: Yup.string()
+          .required('Street is required')
+          .typeError('Invalid street'),
+        number: Yup.string()
+          .required('Number is required')
+          .typeError('Invalid number'),
+        complement: Yup.string(),
+        zip_code: Yup.string()
+          .required('Zip Code is required')
+          .typeError('Invalid Zip Code'),
+      }),
     });
 
     await defaultSchema
@@ -103,33 +105,23 @@ class RecipientController {
         return res.status(400).json({ error: errors.message });
       });
 
-    const {
-      name,
-      email,
-      phone,
-      zip_code,
-      number,
-      street,
-      complement,
-    } = req.body;
+    const { name, email, user_type_id, recipient_address, phone } = req.body;
 
-    // Lookup for user
-    let user = await User.findOne({ where: { email } });
-
-    if (user && user.user_type_id === 1) {
+    if (user_type_id !== 2) {
       return res.status(400).json({
-        error:
-          'Administrators cannot use corporative email to add themselves as recipient.',
+        error: 'The user must be an recipient.',
       });
     }
 
+    // Lookup for user
+    let user = await User.findOne({
+      where: { email },
+    });
+
     if (user) {
-      const addressExists = await RecipientAddress.findOne({
+      const addressExists = await Recipient.findOne({
         where: {
-          zip_code,
-          number,
-          street,
-          complement: complement || null,
+          ...recipient_address,
         },
       });
 
@@ -138,42 +130,50 @@ class RecipientController {
           .status(400)
           .json('Recipient already exists and contains the specified address.');
       }
-    }
-
-    // If user does not exist in users table should add them
-    if (!user) {
+    } else {
+      // If user does not exist in users table should add them
       user = await User.create({
         name,
         email,
-        phone: phone || null,
-        user_type_id: 2,
+        phone,
+        user_type_id,
       });
     }
 
     // Adding recipient address
-    const { country, state, city } = await RecipientAddress.create({
-      ...req.body,
+    const {
+      country,
+      state,
+      city,
+      street,
+      number,
+      complement,
+      zip_code,
+    } = await Recipient.create({
+      ...req.body.recipient_address,
       user_id: user.id,
     });
 
     return res.json({
       id: user.id,
-      user_type_id: user.user_type_id,
+      user_type_id,
       name,
       email,
-      phone: phone || null,
-      country,
-      state,
-      city,
-      zip_code,
-      number,
-      street,
-      complement,
+      phone,
+      recipient_address: {
+        country,
+        state,
+        city,
+        street,
+        number,
+        complement,
+        zip_code,
+      },
     });
   }
 
   async update(req, res) {
-    const schema = Yup.object().shape({
+    const defaultSchema = Yup.object().shape({
       // Validing data entry
       name: Yup.string(),
       email: Yup.string().email(),
@@ -187,54 +187,46 @@ class RecipientController {
       zip_code: Yup.string(),
     });
 
-    if (!(await schema.isValid(req.body))) {
-      return res.status(400).json({ error: 'Validation failed.' });
-    }
+    await defaultSchema
+      .strict()
+      .validate(req.body)
+      .catch(errors => {
+        return res.status(400).json({ error: errors.message });
+      });
 
     const { id } = req.params;
+    const { email } = req.body;
 
     const recipient = await User.findByPk(id);
 
     if (!recipient) {
       res.status(400).json({ error: 'Recipient not found.' });
-    } else if (recipient.user_type_id === 1) {
-      res.status(400).json({ error: 'User is not a recipient.' });
     }
 
-    const recipientAddress = await RecipientAddress.findOne({
-      where: { user_id: id, user_type_id: 2 },
-    });
+    if (email && email !== recipient.email) {
+      const recipientExists = await User.findOne({
+        where: { email },
+      });
 
-    if (!recipientAddress) {
-      res.status(400).json({ error: 'Recipient Address not found.' });
+      if (recipientExists) {
+        return res.status(400).json({ error: 'User already exists. ' });
+      }
     }
 
-    const { name, email, phone, user_type_id } = await recipient.update(
-      req.body
-    );
     const {
-      country,
-      state,
-      city,
-      zip_code,
-      number,
-      street,
-      complement,
-    } = await recipientAddress.update(req.body);
+      name,
+      phone,
+      user_type,
+      recipient_address,
+    } = await recipient.update(req.body);
 
     return res.json({
       id,
-      user_type_id,
       name,
       email,
       phone,
-      country,
-      state,
-      city,
-      zip_code,
-      number,
-      street,
-      complement,
+      user_type,
+      recipient_address,
     });
   }
 

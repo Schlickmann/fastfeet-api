@@ -1,17 +1,12 @@
 import * as Yup from 'yup';
 import User from '../models/User';
-import UserType from '../models/UserType';
 import File from '../models/File';
 
-class UserAdministratorController {
+class UserController {
   async index(req, res) {
     const administrators = await User.findAll({
-      attributes: ['id', 'name', 'email', 'phone', 'user_type_id', 'avatar_id'],
-      where: { user_type_id: 1 },
-      include: [
-        { model: UserType, as: 'user_type', attributes: ['id', 'type'] },
-        { model: File, as: 'avatar', attributes: ['url', 'path'] },
-      ],
+      attributes: ['id', 'name', 'email', 'phone'],
+      include: [{ model: File, as: 'avatar', attributes: ['url', 'path'] }],
     });
 
     return res.json(administrators);
@@ -19,12 +14,9 @@ class UserAdministratorController {
 
   async show(req, res) {
     const administrator = await User.findOne({
-      where: { id: req.params.id, user_type_id: 1 },
+      where: { id: req.params.id },
       attributes: ['id', 'name', 'email', 'phone'],
-      include: [
-        { model: UserType, as: 'user_type', attributes: ['id', 'type'] },
-        { model: File, as: 'avatar', attributes: ['url', 'path'] },
-      ],
+      include: [{ model: File, as: 'avatar', attributes: ['url', 'path'] }],
     });
 
     if (!administrator) {
@@ -44,10 +36,6 @@ class UserAdministratorController {
         .email()
         .required('Email is required')
         .typeError('Invalid email'),
-      user_type_id: Yup.number()
-        .required('User Type is required')
-        .typeError('Invalid user type'),
-      // Password is only required for administrator users
       password: Yup.string()
         .required('Password is required')
         .typeError('Invalid password'),
@@ -61,13 +49,7 @@ class UserAdministratorController {
         return res.status(400).json({ error: errors.message });
       });
 
-    const { user_type_id, email } = req.body;
-
-    if (user_type_id !== 1) {
-      return res
-        .status(400)
-        .json({ error: 'The user must be an administrator.' });
-    }
+    const { email } = req.body;
 
     // Lookup for user
     const userExists = await User.findOne({ where: { email } });
@@ -76,11 +58,9 @@ class UserAdministratorController {
       return res.status(400).json({ error: 'User already exists. ' });
     }
 
-    const { id, name } = await User.create({
-      ...req.body,
-    });
+    const { id, name, phone } = await User.create({ ...req.body });
 
-    return res.json({ id, name, email, user_type_id });
+    return res.json({ id, name, email, phone });
   }
 
   async update(req, res) {
@@ -102,8 +82,8 @@ class UserAdministratorController {
       passwordConfirmation: Yup.string().when('password', (password, field) =>
         field
           ? field
-              .required('Password is required')
-              .typeError('Invalid password')
+              .required('Password Confirmation is required')
+              .typeError('Invalid password confirmation')
               .oneOf([Yup.ref('password')])
           : field
       ),
@@ -116,13 +96,10 @@ class UserAdministratorController {
         return res.status(400).json({ error: errors.message });
       });
 
-    const { email, oldPassword } = req.body;
+    const { email, oldPassword, avatar_id } = req.body;
 
     const user = await User.findByPk(req.userId, {
-      include: [
-        { model: UserType, as: 'user_type', attributes: ['id', 'type'] },
-        { model: File, as: 'avatar', attributes: ['url', 'path'] },
-      ],
+      include: [{ model: File, as: 'avatar', attributes: ['url', 'path'] }],
     });
 
     if (email && email !== user.email) {
@@ -139,17 +116,24 @@ class UserAdministratorController {
       return res.status(401).json({ error: 'Password does not match.' });
     }
 
-    const { id, name, phone, user_type, avatar } = await user.update(req.body);
+    if (avatar_id) {
+      const avatar = await File.findOne({ avatar_id });
+
+      if (!avatar) {
+        return res.status(400).json({ error: 'Avatar does not exist.' });
+      }
+    }
+
+    const { id, name, phone, avatar } = await user.update(req.body);
 
     return res.json({
       id,
       name,
       email,
       phone,
-      user_type,
       avatar,
     });
   }
 }
 
-export default new UserAdministratorController();
+export default new UserController();

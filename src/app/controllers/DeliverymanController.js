@@ -1,17 +1,13 @@
 import * as Yup from 'yup';
 import User from '../models/User';
 import File from '../models/File';
-import UserType from '../models/UserType';
 
 class DeliverymanController {
   async index(req, res) {
     const couriers = await User.findAll({
       attributes: ['id', 'name', 'email', 'phone', 'user_type_id', 'avatar_id'],
       where: { user_type_id: 3 },
-      include: [
-        { model: UserType, as: 'user_type', attributes: ['id', 'type'] },
-        { model: File, as: 'avatar', attributes: ['url', 'path'] },
-      ],
+      include: [{ model: File, as: 'avatar', attributes: ['url', 'path'] }],
     });
 
     return res.json(couriers);
@@ -51,10 +47,7 @@ class DeliverymanController {
     const deliveryman = await User.findOne({
       attributes: ['id', 'name', 'email', 'phone', 'user_type_id', 'avatar_id'],
       where: { id: req.params.id, user_type_id: 3 },
-      include: [
-        { model: UserType, as: 'user_type', attributes: ['id', 'type'] },
-        { model: File, as: 'avatar', attributes: ['url', 'path'] },
-      ],
+      include: [{ model: File, as: 'avatar', attributes: ['url', 'path'] }],
     });
 
     return res.json(deliveryman);

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
-import UserAdministratorController from './app/controllers/UserAdministratorController';
+import UserController from './app/controllers/UserController';
 import SessionController from './app/controllers/SessionController';
 import RecipientController from './app/controllers/RecipientController';
 import DeliverymanController from './app/controllers/DeliverymanController';
@@ -16,7 +16,7 @@ const upload = multer(multerConfig);
 /**
  * External Routes
  */
-routes.post('/users', UserAdministratorController.store);
+routes.post('/users', UserController.store);
 routes.post('/sessions', SessionController.store);
 
 routes.use(AuthMiddleware);
@@ -25,9 +25,9 @@ routes.use(AuthMiddleware);
  */
 
 // Administrator users
-routes.get('/users', UserAdministratorController.index);
-routes.get('/users/:id', UserAdministratorController.show);
-routes.put('/users', UserAdministratorController.update);
+routes.get('/users', UserController.index);
+routes.get('/users/:id', UserController.show);
+routes.put('/users', UserController.update);
 routes.post('/files', upload.single('file'), FileController.store);
 
 // Recipients

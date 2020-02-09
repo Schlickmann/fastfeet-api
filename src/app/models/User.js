@@ -25,17 +25,6 @@ class User extends Model {
   }
 
   static associate(models) {
-    this.hasMany(models.RecipientAddress, {
-      as: 'recipient_addresses',
-      foreignKey: 'user_id',
-      onDelete: 'cascade',
-      hooks: true,
-    });
-
-    this.belongsTo(models.UserType, {
-      as: 'user_type',
-      foreignKey: 'user_type_id',
-    });
     this.belongsTo(models.File, { as: 'avatar', foreignKey: 'avatar_id' });
   }
 
