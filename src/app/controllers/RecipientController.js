@@ -6,7 +6,7 @@ class RecipientController {
   async index(req, res) {
     const recipients = await User.findAll({
       attributes: ['id', 'name', 'email', 'phone'],
-      where: { is_admin: false },
+      where: { user_type_id: 2 },
       include: [
         {
           model: RecipientAddress,
@@ -33,7 +33,7 @@ class RecipientController {
 
     const recipients = await User.findOne({
       attributes: ['id', 'name', 'email', 'phone'],
-      where: { id, is_admin: false },
+      where: { id, user_type_id: 2 },
       include: [
         {
           model: RecipientAddress,
@@ -109,7 +109,7 @@ class RecipientController {
     // Lookup for user
     let user = await User.findOne({ where: { email } });
 
-    if (user && user.is_admin) {
+    if (user && user.user_type_id === 1) {
       return res.status(400).json({
         error:
           'Administrators cannot use corporative email to add themselves as recipient.',
@@ -189,7 +189,7 @@ class RecipientController {
 
     if (!recipient) {
       res.status(400).json({ error: 'Recipient not found.' });
-    } else if (recipient.is_admin) {
+    } else if (recipient.user_type_id === 1) {
       res.status(400).json({ error: 'User is not a recipient.' });
     }
 
@@ -234,7 +234,7 @@ class RecipientController {
 
     if (!recipient) {
       res.status(400).json({ error: 'Recipient not found.' });
-    } else if (recipient.is_admin) {
+    } else if (recipient.user_type_id === 1) {
       res.status(400).json({ error: 'User is not a recipient.' });
     }
 

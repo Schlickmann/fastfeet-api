@@ -35,11 +35,11 @@ routes.post('/recipients', RecipientController.store);
 routes.put('/recipients/:id', RecipientController.update);
 routes.delete('/recipients/:id', RecipientController.delete);
 
-// Deliverymen
-routes.get('/deliverymen', DeliverymanController.index);
-routes.get('/deliverymen/:id', DeliverymanController.show);
-routes.post('/deliverymen', DeliverymanController.store);
-routes.put('/deliverymen/:id', DeliverymanController.update);
-routes.delete('/deliverymen/:id', DeliverymanController.delete);
+// Couriers
+routes.get('/couriers', DeliverymanController.index);
+routes.get('/couriers/:id', DeliverymanController.show);
+routes.post('/couriers', DeliverymanController.store);
+routes.put('/couriers/:id', DeliverymanController.update);
+routes.delete('/couriers/:id', DeliverymanController.delete);
 
 export default routes;

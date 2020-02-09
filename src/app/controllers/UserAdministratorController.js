@@ -9,7 +9,7 @@ class UserAdministratorController {
       email: Yup.string()
         .email()
         .required(),
-      is_admin: Yup.boolean().required(),
+      user_type_id: Yup.number().required(),
       // Password is only required for administrator users
       password: Yup.string().required(),
       phone: Yup.string(),
@@ -19,6 +19,12 @@ class UserAdministratorController {
       return res.status(400).json({ error: 'Validation failed.' });
     }
 
+    if (req.body.user_type_id !== 1) {
+      return res
+        .status(400)
+        .json({ error: 'The user should be an administrator.' });
+    }
+
     // Lookup for user
     const userExists = await User.findOne({ where: { email: req.body.email } });
 
@@ -26,12 +32,12 @@ class UserAdministratorController {
       return res.status(400).json({ error: 'User already exists. ' });
     }
 
-    const { id, name, email, is_admin } = await User.create({
+    const { id, name, email, user_type_id } = await User.create({
       ...req.body,
       user_type_id: 1,
     });
 
-    return res.json({ id, name, email, is_admin });
+    return res.json({ id, name, email, user_type_id });
   }
 
   async update(req, res) {
@@ -72,9 +78,9 @@ class UserAdministratorController {
       return res.status(401).json({ error: 'Password does not match.' });
     }
 
-    const { id, name, phone, is_admin } = await user.update(req.body);
+    const { id, name, phone, user_type_id } = await user.update(req.body);
 
-    return res.json({ id, name, email, phone, is_admin });
+    return res.json({ id, name, email, phone, user_type_id });
   }
 }
 
