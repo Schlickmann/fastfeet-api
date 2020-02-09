@@ -1,9 +1,16 @@
 import * as Yup from 'yup';
 import User from '../models/User';
+import File from '../models/File';
 
 class DeliverymanController {
   async index(req, res) {
-    return res.json();
+    const couriers = await User.findAll({
+      attributes: ['id', 'name', 'email', 'phone', 'user_type_id', 'avatar_id'],
+      where: { user_type_id: 3 },
+      include: [{ model: File, as: 'avatar', attributes: ['url', 'path'] }],
+    });
+
+    return res.json(couriers);
   }
 
   async store(req, res) {
@@ -13,10 +20,7 @@ class DeliverymanController {
       email: Yup.string()
         .email()
         .required(),
-      is_admin: Yup.boolean().required(),
-      // Password is only required for administrator users
-      password: Yup.string().required(),
-      phone: Yup.string(),
+      phone: Yup.string().required(),
       avatar_id: Yup.number(),
     });
 
@@ -31,32 +35,32 @@ class DeliverymanController {
       return res.status(400).json({ error: 'User already exists. ' });
     }
 
-    const { id, name, email, is_admin } = await User.create({
+    const { id, name, email, user_type_id } = await User.create({
       ...req.body,
       user_type_id: 3,
     });
 
-    return res.json({ id, name, email, is_admin });
+    return res.json({ id, name, email, user_type_id });
   }
 
   async show(req, res) {
-    return res.json();
+    const deliveryman = await User.findOne({
+      attributes: ['id', 'name', 'email', 'phone', 'user_type_id', 'avatar_id'],
+      where: { id: req.params.id, user_type_id: 3 },
+      include: [{ model: File, as: 'avatar', attributes: ['url', 'path'] }],
+    });
+
+    return res.json(deliveryman);
   }
 
   async update(req, res) {
     const schema = Yup.object().shape({
-      name: Yup.string(),
-      email: Yup.string().email(),
-      phone: Yup.string(),
-      oldPassword: Yup.string().min(6),
-      password: Yup.string()
-        .min(6)
-        .when('oldPassword', (oldPassword, field) =>
-          oldPassword ? field.required() : field
-        ),
-      passwordConfirmation: Yup.string().when('password', (password, field) =>
-        field ? field.required().oneOf([Yup.ref('password')]) : field
-      ),
+      name: Yup.string().required(),
+      email: Yup.string()
+        .email()
+        .required(),
+      phone: Yup.string().required(),
+      avatar_id: Yup.number(),
     });
 
     if (!(await schema.isValid(req.body))) {
@@ -64,8 +68,13 @@ class DeliverymanController {
     }
 
     const { email, oldPassword } = req.body;
+    const { id } = req.params;
 
-    const user = await User.findByPk(req.userId);
+    const user = await User.findOne({ where: { id, user_type_id: 3 } });
+
+    if (!user) {
+      return res.status(400).json({ error: 'Deliveryman not found. ' });
+    }
 
     if (email && email !== user.email) {
       const userExists = await User.findOne({
@@ -81,13 +90,24 @@ class DeliverymanController {
       return res.status(401).json({ error: 'Password does not match.' });
     }
 
-    const { id, name, phone, is_admin } = await user.update(req.body);
+    const { name, phone, user_type_id } = await user.update(req.body);
 
-    return res.json({ id, name, email, phone, is_admin });
+    return res.json({ id, name, email, phone, user_type_id });
   }
 
   async delete(req, res) {
-    return res.json();
+    const { id } = req.params;
+    const deliveryman = await User.findOne({ where: { id, user_type_id: 3 } });
+
+    if (!deliveryman) {
+      res.status(400).json({ error: 'Deliveryman not found.' });
+    } else if (deliveryman.user_type_id !== 3) {
+      res.status(400).json({ error: 'User is not a deliveryman.' });
+    }
+
+    const deleted = await deliveryman.destroy();
+
+    return res.status(200).json(deleted);
   }
 }
 
