@@ -36,20 +36,30 @@ class UserAdministratorController {
 
   async store(req, res) {
     // Validing data entry
-    const schema = Yup.object().shape({
-      name: Yup.string().required(),
+    const defaultSchema = Yup.object().shape({
+      name: Yup.string()
+        .required('Name is required')
+        .typeError('Invalid name'),
       email: Yup.string()
         .email()
-        .required(),
-      user_type_id: Yup.number().required(),
+        .required('Email is required')
+        .typeError('Invalid email'),
+      user_type_id: Yup.number()
+        .required('User Type is required')
+        .typeError('Invalid user type'),
       // Password is only required for administrator users
-      password: Yup.string().required(),
+      password: Yup.string()
+        .required('Password is required')
+        .typeError('Invalid password'),
       phone: Yup.string(),
     });
 
-    if (!(await schema.isValid(req.body))) {
-      return res.status(400).json({ error: 'Validation failed.' });
-    }
+    await defaultSchema
+      .strict()
+      .validate(req.body)
+      .catch(errors => {
+        return res.status(400).json({ error: errors.message });
+      });
 
     const { user_type_id, email } = req.body;
 
@@ -74,7 +84,7 @@ class UserAdministratorController {
   }
 
   async update(req, res) {
-    const schema = Yup.object().shape({
+    const defaultSchema = Yup.object().shape({
       name: Yup.string(),
       email: Yup.string().email(),
       phone: Yup.string(),
@@ -83,16 +93,28 @@ class UserAdministratorController {
       password: Yup.string()
         .min(6)
         .when('oldPassword', (oldPassword, field) =>
-          oldPassword ? field.required() : field
+          oldPassword
+            ? field
+                .required('Password is required')
+                .typeError('Invalid password')
+            : field
         ),
       passwordConfirmation: Yup.string().when('password', (password, field) =>
-        field ? field.required().oneOf([Yup.ref('password')]) : field
+        field
+          ? field
+              .required('Password is required')
+              .typeError('Invalid password')
+              .oneOf([Yup.ref('password')])
+          : field
       ),
     });
 
-    if (!(await schema.isValid(req.body))) {
-      return res.status(400).json({ error: 'Validation failed.' });
-    }
+    await defaultSchema
+      .strict()
+      .validate(req.body)
+      .catch(errors => {
+        return res.status(400).json({ error: errors.message });
+      });
 
     const { email, oldPassword } = req.body;
 

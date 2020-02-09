@@ -1,13 +1,15 @@
 import * as Yup from 'yup';
 import User from '../models/User';
+import UserType from '../models/UserType';
 import RecipientAddress from '../models/RecipientAddress';
 
 class RecipientController {
   async index(req, res) {
     const recipients = await User.findAll({
-      attributes: ['id', 'name', 'email', 'phone', 'user_type_id'],
+      attributes: ['id', 'name', 'email', 'phone'],
       where: { user_type_id: 2 },
       include: [
+        { model: UserType, as: 'user_type', attributes: ['id', 'type'] },
         {
           model: RecipientAddress,
           as: 'recipient_addresses',
@@ -31,10 +33,11 @@ class RecipientController {
   async show(req, res) {
     const { id } = req.params;
 
-    const recipients = await User.findOne({
-      attributes: ['id', 'name', 'email', 'phone', 'user_type_id'],
+    const recipient = await User.findOne({
+      attributes: ['id', 'name', 'email', 'phone'],
       where: { id, user_type_id: 2 },
       include: [
+        { model: UserType, as: 'user_type', attributes: ['id', 'type'] },
         {
           model: RecipientAddress,
           as: 'recipient_addresses',
@@ -52,7 +55,11 @@ class RecipientController {
       ],
     });
 
-    return res.json(recipients);
+    if (!recipient) {
+      return res.status(400).json({ error: 'Recipient not found.' });
+    }
+
+    return res.json(recipient);
   }
 
   async store(req, res) {
