@@ -1,4 +1,3 @@
-import { format, parseISO } from 'date-fns';
 import Mail from '../../lib/Mail';
 
 class NewOrderMail {
@@ -13,7 +12,7 @@ class NewOrderMail {
     console.log('Queue started.');
     await Mail.sendMail({
       to: `${order.deliveryman.name} <${order.deliveryman.email}>`,
-      subject: 'New Order Added',
+      subject: 'New order added to be delivered',
       template: 'newOrder',
       context: {
         deliveryman: order.deliveryman.name,

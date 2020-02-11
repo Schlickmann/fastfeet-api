@@ -107,7 +107,17 @@ class OrderController {
     });
 
     // Adding email to queue
-    await Queue.add(NewOrderMail.key, { appointment });
+    await Queue.add(NewOrderMail.key, {
+      order: {
+        id: order.id,
+        product: order.product,
+        recipient: { name: existRecipient.name },
+        deliveryman: {
+          name: existDeliveryman.name,
+          email: existDeliveryman.email,
+        },
+      },
+    });
 
     return res.json(order);
   }
