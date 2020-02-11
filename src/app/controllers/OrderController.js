@@ -15,7 +15,7 @@ class OrderController {
     const orders = await Orders.findAll({
       where: { canceled_at: null },
       attributes: ['id', 'product', 'start_date', 'end_date'],
-      limit: page,
+      limit: 20,
       offset: (page - 1) * 20,
       include: [
         {
