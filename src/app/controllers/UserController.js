@@ -13,20 +13,6 @@ class UserController {
     return res.json(administrators);
   }
 
-  async show(req, res) {
-    const administrator = await Users.findOne({
-      where: { id: req.params.id },
-      attributes: ['id', 'name', 'email', 'phone'],
-      include: [{ model: Files, as: 'avatar', attributes: ['url', 'path'] }],
-    });
-
-    if (!administrator) {
-      return res.status(400).json({ error: 'User not found.' });
-    }
-
-    return res.json(administrator);
-  }
-
   async store(req, res) {
     // Validing data entry
     const defaultSchema = Yup.object().shape({
@@ -62,6 +48,20 @@ class UserController {
     const { id, name, phone } = await Users.create({ ...req.body });
 
     return res.json({ id, name, email, phone });
+  }
+
+  async show(req, res) {
+    const administrator = await Users.findOne({
+      where: { id: req.params.id },
+      attributes: ['id', 'name', 'email', 'phone'],
+      include: [{ model: Files, as: 'avatar', attributes: ['url', 'path'] }],
+    });
+
+    if (!administrator) {
+      return res.status(400).json({ error: 'User not found.' });
+    }
+
+    return res.json(administrator);
   }
 
   async update(req, res) {

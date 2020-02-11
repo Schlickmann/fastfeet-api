@@ -69,6 +69,10 @@ class DeliverymanController {
       include: [{ model: Files, as: 'avatar', attributes: ['url', 'path'] }],
     });
 
+    if (!deliveryman) {
+      return res.status(400).json({ error: 'Deliveryman not found.' });
+    }
+
     return res.json(deliveryman);
   }
 
@@ -95,7 +99,7 @@ class DeliverymanController {
     });
 
     if (!deliveryman) {
-      return res.status(400).json({ error: 'Deliveryman not found. ' });
+      return res.status(400).json({ error: 'Deliveryman not found.' });
     }
 
     if (email && email !== deliveryman.email) {
@@ -104,7 +108,7 @@ class DeliverymanController {
       });
 
       if (deliverymanExists) {
-        return res.status(400).json({ error: 'Deliveryman already exists. ' });
+        return res.status(400).json({ error: 'Deliveryman already exists.' });
       }
     }
 

@@ -22,33 +22,6 @@ class RecipientController {
     return res.json(recipients);
   }
 
-  async show(req, res) {
-    const { id } = req.params;
-
-    const recipient = await Recipients.findOne({
-      attributes: [
-        'id',
-        'name',
-        'email',
-        'phone',
-        'country',
-        'state',
-        'city',
-        'zip_code',
-        'number',
-        'street',
-        'complement',
-      ],
-      where: { id },
-    });
-
-    if (!recipient) {
-      return res.status(400).json({ error: 'Recipient not found.' });
-    }
-
-    return res.json(recipient);
-  }
-
   async store(req, res) {
     const defaultSchema = Yup.object().shape({
       // Validing data entry
@@ -126,6 +99,33 @@ class RecipientController {
       street,
       complement,
     });
+  }
+
+  async show(req, res) {
+    const { id } = req.params;
+
+    const recipient = await Recipients.findOne({
+      attributes: [
+        'id',
+        'name',
+        'email',
+        'phone',
+        'country',
+        'state',
+        'city',
+        'zip_code',
+        'number',
+        'street',
+        'complement',
+      ],
+      where: { id },
+    });
+
+    if (!recipient) {
+      return res.status(400).json({ error: 'Recipient not found.' });
+    }
+
+    return res.json(recipient);
   }
 
   async update(req, res) {
