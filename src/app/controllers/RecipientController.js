@@ -1,9 +1,9 @@
 import * as Yup from 'yup';
-import Recipient from '../models/Recipient';
+import Recipients from '../models/Recipients';
 
 class RecipientController {
   async index(req, res) {
-    const recipients = await Recipient.findAll({
+    const recipients = await Recipients.findAll({
       attributes: [
         'id',
         'name',
@@ -25,7 +25,7 @@ class RecipientController {
   async show(req, res) {
     const { id } = req.params;
 
-    const recipient = await Recipient.findOne({
+    const recipient = await Recipients.findOne({
       attributes: [
         'id',
         'name',
@@ -93,7 +93,7 @@ class RecipientController {
     const { email, phone } = req.body;
 
     // Lookup for user
-    const recipient = await Recipient.findOne({
+    const recipient = await Recipients.findOne({
       where: { email },
     });
 
@@ -111,7 +111,7 @@ class RecipientController {
       number,
       street,
       complement,
-    } = await Recipient.create({ ...req.body });
+    } = await Recipients.create({ ...req.body });
 
     return res.json({
       id,
@@ -152,14 +152,14 @@ class RecipientController {
 
     const { email } = req.body;
 
-    const recipient = await Recipient.findByPk(req.params.id);
+    const recipient = await Recipients.findByPk(req.params.id);
 
     if (!recipient) {
       res.status(400).json({ error: 'Recipient not found.' });
     }
 
     if (email && email !== recipient.email) {
-      const recipientExists = await Recipient.findOne({
+      const recipientExists = await Recipients.findOne({
         where: { email },
       });
 
@@ -199,7 +199,7 @@ class RecipientController {
   async delete(req, res) {
     const { id } = req.params;
 
-    const recipient = await Recipient.findByPk(id);
+    const recipient = await Recipients.findByPk(id);
 
     if (!recipient) {
       res.status(400).json({ error: 'Recipient not found.' });

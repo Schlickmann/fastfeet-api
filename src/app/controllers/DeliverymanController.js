@@ -1,13 +1,13 @@
 import * as Yup from 'yup';
-import User from '../models/User';
-import File from '../models/File';
+import Couriers from '../models/Couriers';
+import Files from '../models/Files';
 
 class DeliverymanController {
   async index(req, res) {
-    const couriers = await User.findAll({
-      attributes: ['id', 'name', 'email', 'phone', 'user_type_id', 'avatar_id'],
-      where: { user_type_id: 3 },
-      include: [{ model: File, as: 'avatar', attributes: ['url', 'path'] }],
+    const couriers = await Couriers.findAll({
+      attributes: ['id', 'name', 'email', 'phone'],
+      include: [{ model: Files, as: 'avatar', attributes: ['url', 'path'] }],
+      order: ['name'],
     });
 
     return res.json(couriers);
@@ -15,94 +15,110 @@ class DeliverymanController {
 
   async store(req, res) {
     // Validing data entry
-    const schema = Yup.object().shape({
-      name: Yup.string().required(),
+    const defaultSchema = Yup.object().shape({
+      name: Yup.string()
+        .required('Name is required')
+        .typeError('Invalid name'),
       email: Yup.string()
         .email()
-        .required(),
-      phone: Yup.string().required(),
+        .required('Email is required')
+        .typeError('Invalid email'),
+      phone: Yup.string()
+        .required('Phone is required')
+        .typeError('Invalid phone'),
       avatar_id: Yup.number(),
     });
 
-    if (!(await schema.isValid(req.body))) {
-      return res.status(400).json({ error: 'Validation failed.' });
-    }
+    await defaultSchema
+      .strict()
+      .validate(req.body)
+      .catch(errors => {
+        return res.status(400).json({ error: errors.message });
+      });
+
+    const { email, avatar_id } = req.body;
 
     // Lookup for user
-    const userExists = await User.findOne({ where: { email: req.body.email } });
-
-    if (userExists) {
-      return res.status(400).json({ error: 'User already exists. ' });
-    }
-
-    const { id, name, email, user_type_id } = await User.create({
-      ...req.body,
-      user_type_id: 3,
+    const deliverymanExists = await Couriers.findOne({
+      where: { email },
     });
 
-    return res.json({ id, name, email, user_type_id });
+    if (deliverymanExists) {
+      return res.status(400).json({ error: 'Deliveryman already exists.' });
+    }
+
+    if (avatar_id) {
+      const avatar = await Files.findOne({ avatar_id });
+
+      if (!avatar) {
+        return res.status(400).json({ error: 'Avatar does not exist.' });
+      }
+    }
+
+    const { id, name, phone } = await Couriers.create({
+      ...req.body,
+    });
+
+    return res.json({ id, name, email, phone });
   }
 
   async show(req, res) {
-    const deliveryman = await User.findOne({
-      attributes: ['id', 'name', 'email', 'phone', 'user_type_id', 'avatar_id'],
-      where: { id: req.params.id, user_type_id: 3 },
-      include: [{ model: File, as: 'avatar', attributes: ['url', 'path'] }],
+    const deliveryman = await Couriers.findOne({
+      attributes: ['id', 'name', 'email', 'phone'],
+      where: { id: req.params.id },
+      include: [{ model: Files, as: 'avatar', attributes: ['url', 'path'] }],
     });
 
     return res.json(deliveryman);
   }
 
   async update(req, res) {
-    const schema = Yup.object().shape({
-      name: Yup.string().required(),
-      email: Yup.string()
-        .email()
-        .required(),
-      phone: Yup.string().required(),
+    const defaultSchema = Yup.object().shape({
+      name: Yup.string(),
+      email: Yup.string().email(),
+      phone: Yup.string(),
       avatar_id: Yup.number(),
     });
 
-    if (!(await schema.isValid(req.body))) {
-      return res.status(400).json({ error: 'Validation failed.' });
-    }
+    await defaultSchema
+      .strict()
+      .validate(req.body)
+      .catch(errors => {
+        return res.status(400).json({ error: errors.message });
+      });
 
-    const { email, oldPassword } = req.body;
+    const { email } = req.body;
     const { id } = req.params;
 
-    const user = await User.findOne({ where: { id, user_type_id: 3 } });
+    const deliveryman = await Couriers.findByPk(id, {
+      include: [{ model: Files, as: 'avatar', attributes: ['url', 'path'] }],
+    });
 
-    if (!user) {
+    if (!deliveryman) {
       return res.status(400).json({ error: 'Deliveryman not found. ' });
     }
 
-    if (email && email !== user.email) {
-      const userExists = await User.findOne({
+    if (email && email !== deliveryman.email) {
+      const deliverymanExists = await Couriers.findOne({
         where: { email },
       });
 
-      if (userExists) {
-        return res.status(400).json({ error: 'User already exists. ' });
+      if (deliverymanExists) {
+        return res.status(400).json({ error: 'Deliveryman already exists. ' });
       }
     }
 
-    if (oldPassword && !(await user.checkPassword(oldPassword))) {
-      return res.status(401).json({ error: 'Password does not match.' });
-    }
+    const { name, phone, avatar } = await deliveryman.update(req.body);
 
-    const { name, phone, user_type_id } = await user.update(req.body);
-
-    return res.json({ id, name, email, phone, user_type_id });
+    return res.json({ id, name, email, phone, avatar });
   }
 
   async delete(req, res) {
     const { id } = req.params;
-    const deliveryman = await User.findOne({ where: { id, user_type_id: 3 } });
+    const deliveryman = await Couriers.findOne({ where: { id } });
 
     if (!deliveryman) {
       res.status(400).json({ error: 'Deliveryman not found.' });
-    } else if (deliveryman.user_type_id !== 3) {
-      res.status(400).json({ error: 'User is not a deliveryman.' });
     }
 
     const deleted = await deliveryman.destroy();

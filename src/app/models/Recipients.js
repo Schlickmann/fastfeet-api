@@ -1,6 +1,6 @@
 import Sequelize, { Model } from 'sequelize';
 
-class Recipient extends Model {
+class Recipients extends Model {
   static init(sequelize) {
     super.init(
       {
@@ -22,4 +22,4 @@ class Recipient extends Model {
   }
 }
 
-export default Recipient;
+export default Recipients;

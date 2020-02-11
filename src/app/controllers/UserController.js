@@ -1,22 +1,23 @@
 import * as Yup from 'yup';
-import User from '../models/User';
-import File from '../models/File';
+import Users from '../models/Users';
+import Files from '../models/Files';
 
 class UserController {
   async index(req, res) {
-    const administrators = await User.findAll({
+    const administrators = await Users.findAll({
       attributes: ['id', 'name', 'email', 'phone'],
-      include: [{ model: File, as: 'avatar', attributes: ['url', 'path'] }],
+      include: [{ model: Files, as: 'avatar', attributes: ['url', 'path'] }],
+      order: ['name'],
     });
 
     return res.json(administrators);
   }
 
   async show(req, res) {
-    const administrator = await User.findOne({
+    const administrator = await Users.findOne({
       where: { id: req.params.id },
       attributes: ['id', 'name', 'email', 'phone'],
-      include: [{ model: File, as: 'avatar', attributes: ['url', 'path'] }],
+      include: [{ model: Files, as: 'avatar', attributes: ['url', 'path'] }],
     });
 
     if (!administrator) {
@@ -52,13 +53,13 @@ class UserController {
     const { email } = req.body;
 
     // Lookup for user
-    const userExists = await User.findOne({ where: { email } });
+    const userExists = await Users.findOne({ where: { email } });
 
     if (userExists) {
       return res.status(400).json({ error: 'User already exists. ' });
     }
 
-    const { id, name, phone } = await User.create({ ...req.body });
+    const { id, name, phone } = await Users.create({ ...req.body });
 
     return res.json({ id, name, email, phone });
   }
@@ -98,12 +99,12 @@ class UserController {
 
     const { email, oldPassword, avatar_id } = req.body;
 
-    const user = await User.findByPk(req.userId, {
-      include: [{ model: File, as: 'avatar', attributes: ['url', 'path'] }],
+    const user = await Users.findByPk(req.userId, {
+      include: [{ model: Files, as: 'avatar', attributes: ['url', 'path'] }],
     });
 
     if (email && email !== user.email) {
-      const userExists = await User.findOne({
+      const userExists = await Users.findOne({
         where: { email },
       });
 
@@ -117,7 +118,7 @@ class UserController {
     }
 
     if (avatar_id) {
-      const avatar = await File.findOne({ avatar_id });
+      const avatar = await Files.findOne({ avatar_id });
 
       if (!avatar) {
         return res.status(400).json({ error: 'Avatar does not exist.' });
