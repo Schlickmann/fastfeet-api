@@ -7,6 +7,7 @@ import Notification from '../schemas/Notification';
 
 import NewOrderMail from '../jobs/NewOrderMail';
 import ChangedOrderMail from '../jobs/ChangedOrderMail';
+import RemovedOrderMail from '../jobs/RemovedOrderMail';
 import Queue from '../../lib/Queue';
 
 class OrderController {
@@ -185,7 +186,7 @@ class OrderController {
     const { deliveryman_id, recipient_id, product } = req.body;
 
     let order = await Orders.findByPk(id, {
-      attributes: ['product', 'canceled_at', 'start_date', 'end_date'],
+      attributes: ['id', 'product', 'canceled_at', 'start_date', 'end_date'],
       include: [
         { model: Recipients, as: 'recipient', attributes: ['name'] },
         {
@@ -212,7 +213,16 @@ class OrderController {
         .json({ error: 'You cannot change orders in transit.' });
     }
 
-    if (deliveryman_id === order.deliveryman.id) {
+    const currentDeliveryman = order.deliveryman;
+    console.log(currentDeliveryman.id);
+    console.log(order.deliveryman.id);
+
+    order = await order.update(req.body);
+
+    console.log(order.deliveryman.id);
+    console.log(deliveryman_id);
+
+    if (deliveryman_id === currentDeliveryman.id) {
       /**
        * Notify Deliveryman
        */
@@ -236,19 +246,47 @@ class OrderController {
       });
     } else {
       /**
-       * Notify Deliveryman
+       * Notify Old Deliveryman
        */
 
       await Notification.create({
         content: `Order ${id} has been removed from your queue`,
+        deliveryman: currentDeliveryman.id,
+      });
+
+      console.log(currentDeliveryman.id);
+      console.log(order.deliveryman.id);
+      console.log(deliveryman_id);
+
+      // Adding email to queue
+      await Queue.add(RemovedOrderMail.key, {
+        // oldDeliveryman: { ...currentDeliveryman},
+        order: {
+          id,
+          product,
+          recipient: { name: order.recipient.name },
+          currentDeliveryman,
+          deliveryman: {
+            name: currentDeliveryman.name,
+            email: currentDeliveryman.email,
+          },
+        },
+      });
+
+      /**
+       * Notify Deliveryman
+       */
+
+      await Notification.create({
+        content: `Order ${id} has been assigned to you`,
         deliveryman: order.deliveryman.id,
       });
 
       // Adding email to queue
-      await Queue.add(ChangedOrderMail.key, {
+      await Queue.add(NewOrderMail.key, {
         order: {
-          id,
-          product,
+          id: order.id,
+          product: order.product,
           recipient: { name: order.recipient.name },
           deliveryman: {
             name: order.deliveryman.name,
@@ -257,8 +295,6 @@ class OrderController {
         },
       });
     }
-
-    order = await order.update(req.body);
 
     return res.json(order);
   }
